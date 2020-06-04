@@ -10,7 +10,7 @@ import Foundation
 import CoreBluetooth
 import AVFoundation
 
-enum PercussionType : Hashable, CaseIterable { case hihat, crash, ride, snare, racktom, floortom, kick }
+enum PercussionType : Int, Hashable, CaseIterable { case hihat, crash, ride, snare, racktom, floortom, kick }
 
 public struct PercussiveInstrument {
     static let serviceUUID = CBUUID(string: "3DD807AC-6B32-4848-8DFD-CF92B1926A85")

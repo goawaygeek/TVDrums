@@ -13,7 +13,7 @@ import CoreBluetooth
 import MultipeerConnectivity
 
 
-class ViewController: UIViewController, DrumTriggerDelegate, DrumCentralDelegate, MCNearbyServiceAdvertiserDelegate, MCNearbyServiceBrowserDelegate, MCSessionDelegate, StreamDelegate {
+class ViewController: UIViewController, DrumTriggerDelegate, DrumCentralDelegate, DrumMultipeerDelegate {
 
     // Main Audio Engine and it's corresponding mixer
     var audioEngine: DrummerAudioEngine = DrummerAudioEngine()
@@ -29,18 +29,7 @@ class ViewController: UIViewController, DrumTriggerDelegate, DrumCentralDelegate
     
     var drumEmitters : [PercussionType : CAEmitterLayer ] = [:]
     
-    var drumSelection = 0
-    
-    let multipeertype = "kysor-drums"
-    let hostPeerID = MCPeerID(displayName: "drum-brain")
-    let drumPeerID = MCPeerID(displayName: "drum")
-    var serviceAdvertiser : MCNearbyServiceAdvertiser?
-    var serviceBrowser : MCNearbyServiceBrowser?
-    var outputStream:OutputStream?
-    var inputStream:InputStream?
-    
-    var session : MCSession!
-    var isSender = false
+    var drumMultipeer : DrumMultipeer?
     
     @IBOutlet weak var drumSelector: UISegmentedControl!
     @IBOutlet weak var kickButton: UIButton!
@@ -53,13 +42,13 @@ class ViewController: UIViewController, DrumTriggerDelegate, DrumCentralDelegate
     override func viewDidLoad() {
         super.viewDidLoad()
         // setup the drumkit
-        // Do any additional setup after loading the view.
         PercussionType.allCases.forEach {
             (drumkit.append(PercussiveInstrument(type: $0)))
         }
         
         // setup the segmented control and buttons
         for i in 0..<drumkit.count {
+            // TODO: adjust the number of segments on the control
             drumSelector.setTitle(drumkit[i].description, forSegmentAt: i)
             switch drumkit[i].type {
             case .kick: kickButton.tag = i
@@ -90,16 +79,6 @@ class ViewController: UIViewController, DrumTriggerDelegate, DrumCentralDelegate
         emitterSetup()
         
         // drumkit is ready to play locally!
-        serviceAdvertiser = MCNearbyServiceAdvertiser(peer: drumPeerID, discoveryInfo: nil, serviceType: multipeertype)
-        serviceAdvertiser!.delegate = self
-        
-        
-        serviceBrowser = MCNearbyServiceBrowser(peer: drumPeerID, serviceType: multipeertype)
-        serviceBrowser!.delegate = self
-        
-        session = MCSession(peer: drumPeerID, securityIdentity: nil, encryptionPreference: .none)
-        session.delegate = self
-        
     }
     
     // create the AVAudioPlayerNodes here
@@ -112,42 +91,36 @@ class ViewController: UIViewController, DrumTriggerDelegate, DrumCentralDelegate
         displayHit(instrument: drumkit[button.tag].type)
     }
     
-    @IBAction func drumSelected(_ sender: UISegmentedControl) {
-        let control = sender
-        //print(control.selectedSegmentIndex)
-        drumSelection = control.selectedSegmentIndex
-    }
-    @IBAction func bluetoothStatus(_ sender: UISwitch) {
-        let btstatus = sender
-        print("switch changed to: ", btstatus.isOn)
-        if btstatus.isOn {
+    @IBAction func senderState(_ sender: UISwitch) {
+        let senderStatus = sender
+        print("switch changed to: ", senderStatus.isOn)
+        if senderStatus.isOn {
             // start the peripheral if it doesn't exist
-            // set up multipeer, you probably don't want to do this from scratch every time but let's just get it working
-            //let title = drumSelector.titleForSegment(at: drumSelector.selectedSegmentIndex)!
-            //serviceAdvertiser = MCNearbyServiceAdvertiser(peer: MCPeerID(displayName: title), discoveryInfo: nil, serviceType: multipeertype)
-            //serviceAdvertiser!.delegate = self
-            serviceAdvertiser!.startAdvertisingPeer()
-            
+            if drumMultipeer == nil {
+                drumMultipeer = DrumMultipeer(asType: .sender)
+                drumMultipeer!.delegate = self
+            }
+            drumMultipeer!.startAdvertising()
             drumSelector.isEnabled = false
-            isSender = true
         } else {
-            serviceAdvertiser!.stopAdvertisingPeer()
+            drumMultipeer!.stopAdvertising()
             drumSelector.isEnabled = true
-            isSender = false
         }
     }
     
-    @IBAction func btCentralStatus(_ sender: UISwitch) {
-        let btstatus = sender
-        print("switch changed to: ", btstatus.isOn)
-        if btstatus.isOn {
+    @IBAction func receiverState(_ sender: UISwitch) {
+        let receiverStatus = sender
+        print("switch changed to: ", receiverStatus.isOn)
+        if receiverStatus.isOn {
             // start the peripheral
-            //serviceBrowser = MCNearbyServiceBrowser(peer: hostPeerID, serviceType: multipeertype)
-            //serviceBrowser!.delegate = self
-            serviceBrowser!.startBrowsingForPeers()
+            if drumMultipeer == nil {
+                drumMultipeer = DrumMultipeer(asType: .receiver)
+                // show that you're ready or how many connections you have
+                drumMultipeer!.startAdvertising()
+            }
         } else {
             // stop the peripheral
-            serviceBrowser!.stopBrowsingForPeers()
+            drumMultipeer!.stopAdvertising()
         }
     }
     
@@ -157,31 +130,15 @@ class ViewController: UIViewController, DrumTriggerDelegate, DrumCentralDelegate
         if drumkit[drumSelector.selectedSegmentIndex].type == .kick {
             view.backgroundColor = .random()
         }
+        // if you're acting as a multipeer network send the hit
+        if drumMultipeer?.type == .sender {
+            drumMultipeer?.sendPercussiveHit(percussionType: drumkit[drumSelector.selectedSegmentIndex].type)
+        }
         /*
         // bluetooth
         guard let advertising = drumPeripheral?.isAdvertising() else { return }
         if advertising { drumPeripheral?.sendTrigger() }
         */
-        // multipeer
-        if session.connectedPeers.count > 0 && isSender{
-            /*
-            do {
-                // this is a potential issue as it assumes all connected peers have the same UISegmentedControl values
-                let data = withUnsafeBytes(of: drumSelector.selectedSegmentIndex) { Data($0) }
-                try session.send(data, toPeers: session.connectedPeers, with: .unreliable)
-            }
-            catch let error {
-                NSLog("%@", "Error for sending: \(error)")
-            }*/
-            let string = "Testing stream"
-            //let data = string.data(using: String.Encoding.utf8)!
-            //let bytesWritten = data.withUnsafeBytes { outputStream?.write($0, maxLength: data.count) }
-            if let output = outputStream {
-                output.write(string, maxLength: string.utf8.count)
-                
-                print("outputStream written: \(string)")
-            }
-        }
     }
     
     // Bluetooth delegate
@@ -207,8 +164,10 @@ class ViewController: UIViewController, DrumTriggerDelegate, DrumCentralDelegate
             let emitterLayer = InstrumentEmitter()
             let x = CGFloat(instrument.location.x) * widthMidPoint
             let y = CGFloat(instrument.location.y) * height
+            // FIXME: this could crash if you have two drums of the same type
             drumEmitters[instrument.type] = emitterLayer.createDrumEmitterLayerWith(color: UIColor.red.cgColor, location: CGPoint(x: widthMidPoint + x, y: height - y))
             view.layer.addSublayer(drumEmitters[instrument.type]!)
+            drumEmitters[instrument.type]?.isHidden = true
         }
     }
     
@@ -216,6 +175,7 @@ class ViewController: UIViewController, DrumTriggerDelegate, DrumCentralDelegate
         if drumEmitters[instrument]!.velocity == 1 {
             drumEmitters[instrument]!.velocity = 1000
             drumEmitters[instrument]!.birthRate = 1000
+            drumEmitters[instrument]?.isHidden = false
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 // your code here
                 self.displayHit(instrument: instrument)
@@ -223,119 +183,22 @@ class ViewController: UIViewController, DrumTriggerDelegate, DrumCentralDelegate
         } else {
             drumEmitters[instrument]!.velocity = 1
             drumEmitters[instrument]!.birthRate = 1
+            drumEmitters[instrument]?.isHidden = true
         }
     }
     
-    func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didNotStartAdvertisingPeer error: Error) {
-        NSLog("%@", "didNotStartAdvertisingPeer: \(error)")
-    }
-
-    func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
-        NSLog("%@", "didReceiveInvitationFromPeer \(peerID)")
-        invitationHandler(true, session)
-    }
-    
-    func browser(_ browser: MCNearbyServiceBrowser, didNotStartBrowsingForPeers error: Error) {
-        NSLog("%@", "didNotStartBrowsingForPeers: \(error)")
-    }
-
-    func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String : String]?) {
-        NSLog("%@", "foundPeer: \(peerID)")
-        NSLog("%@", "invitePeer: \(peerID)")
-        browser.invitePeer(peerID, to: session, withContext: nil, timeout: 10)
-    }
-
-    func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {
-        NSLog("%@", "lostPeer: \(peerID)")
-    }
-    
-    func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
-        NSLog("%@", "peer \(peerID) didChangeState: \(state.rawValue)")
-        //self.delegate?.connectedDevicesChanged(manager: self, connectedDevices: session.connectedPeers.map{$0.displayName})
-        switch state {
-            case .notConnected: break
-            case .connecting: break
-            case .connected: connectStream() // try and connect to an output stream
-            default: break
-        }
-    }
-
-    func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
-        
-        // when the data is "HIT" then play the corresponding drum based on the peerID
-        // https://stackoverflow.com/questions/28680589/how-to-convert-an-int-into-nsdata-in-swift
-        let drumReceived = data.withUnsafeBytes {
-            $0.load(as: Int.self)
-        }
-        NSLog("%@", "didReceiveData: \(data) as int: \(drumReceived)")
-        
-        // this is happening on a weird thread or something else is getting in the way
-        DispatchQueue.main.async {
-            self.audioEngine.drumTrigger(percussiveInstrument: self.drumkit[drumReceived])
-            self.displayHit(instrument: self.drumkit[drumReceived].type)
-            if self.drumkit[drumReceived].type == .kick {
-                self.view.backgroundColor = .random()
+    // DrumMultiPeerDelegate
+    func hitReceived(forPercussiveType: PercussionType) {
+        //TODO: should these really take different inputs or should I
+        // change them all to accept the same (type or instrument)
+        for drum in drumkit {
+            if drum.type == forPercussiveType {
+                audioEngine.drumTrigger(percussiveInstrument: drum)
+                break
             }
         }
+        displayHit(instrument: forPercussiveType)
     }
-
-    func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {
-        NSLog("%@", "didReceiveStream")
-        inputStream = stream
-        inputStream!.delegate = self
-        inputStream!.schedule(in: RunLoop.main, forMode: RunLoop.Mode.default)
-        inputStream!.open()
-    }
-
-    func session(_ session: MCSession, didStartReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, with progress: Progress) {
-        NSLog("%@", "didStartReceivingResourceWithName")
-    }
-
-    func session(_ session: MCSession, didFinishReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, at localURL: URL?, withError error: Error?) {
-        NSLog("%@", "didFinishReceivingResourceWithName")
-    }
-    
-    func connectStream() {
-        if isSender {
-            do {
-                // cycle through session.connectedPeers[].displayName to find the "drum-brain"
-                // open a stream to the "drum-brain"
-                // send it your drum type to the stream when it is open
-                // on the drum-brain play the stream
-                try outputStream = session.startStream(withName: "drum-brain", toPeer: session.connectedPeers[0])
-                if let outputStream = outputStream {
-                    outputStream.delegate = self
-                    outputStream.schedule(in: RunLoop.main, forMode: RunLoop.Mode.default)
-                    outputStream.open()
-                }
-                
-            } catch {
-                print("error in connectStream()")
-            }
-        }
-    }
-    
-    func stream(_ aStream: Stream, handle eventCode: Stream.Event) {
-        print("stream delegate called")
-        switch(eventCode){
-        case Stream.Event.hasBytesAvailable:
-            let input = aStream as! InputStream
-            var buffer = [UInt8](repeating: 0, count: 1024) //allocate a buffer. The size of the buffer will depended on the size of the data you are sending.
-            let numberBytes = input.read(&buffer, maxLength:1024)
-            let data = Data(bytes: &buffer, count: numberBytes)
-            let dataString = String(decoding: data, as: UTF8.self)
-            //let message = NSKeyedUnarchiver.unarchiveObject(with: dataString as Data) as! String //deserializing the NSData
-            
-            print("received message as stream\(dataString)")
-        //input
-        case Stream.Event.hasSpaceAvailable:
-            break
-        //output
-        default:
-            break
-        }
-    }
-    
 }
 
 // https://stackoverflow.com/questions/29779128/how-to-make-a-random-color-with-swift
