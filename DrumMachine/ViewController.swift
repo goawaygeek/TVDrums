@@ -90,14 +90,14 @@ class ViewController: UIViewController, DrumTriggerDelegate, DrumCentralDelegate
         emitterSetup()
         
         // drumkit is ready to play locally!
-        serviceAdvertiser = MCNearbyServiceAdvertiser(peer: hostPeerID, discoveryInfo: nil, serviceType: multipeertype)
+        serviceAdvertiser = MCNearbyServiceAdvertiser(peer: drumPeerID, discoveryInfo: nil, serviceType: multipeertype)
         serviceAdvertiser!.delegate = self
         
         
-        serviceBrowser = MCNearbyServiceBrowser(peer: hostPeerID, serviceType: multipeertype)
+        serviceBrowser = MCNearbyServiceBrowser(peer: drumPeerID, serviceType: multipeertype)
         serviceBrowser!.delegate = self
         
-        session = MCSession(peer: hostPeerID, securityIdentity: nil, encryptionPreference: .required)
+        session = MCSession(peer: drumPeerID, securityIdentity: nil, encryptionPreference: .none)
         session.delegate = self
         
     }
@@ -298,6 +298,10 @@ class ViewController: UIViewController, DrumTriggerDelegate, DrumCentralDelegate
     func connectStream() {
         if isSender {
             do {
+                // cycle through session.connectedPeers[].displayName to find the "drum-brain"
+                // open a stream to the "drum-brain"
+                // send it your drum type to the stream when it is open
+                // on the drum-brain play the stream
                 try outputStream = session.startStream(withName: "drum-brain", toPeer: session.connectedPeers[0])
                 if let outputStream = outputStream {
                     outputStream.delegate = self
