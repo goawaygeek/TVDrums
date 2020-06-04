@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="16096" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="16097" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
     <device id="retina6_1" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
@@ -89,21 +89,18 @@
                                     <segment title="crash"/>
                                     <segment title="ride"/>
                                 </segments>
-                                <connections>
-                                    <action selector="drumSelected:" destination="BYZ-38-t0r" eventType="valueChanged" id="6WX-4R-6nM"/>
-                                </connections>
                             </segmentedControl>
                             <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="5ec-9f-opi">
                                 <rect key="frame" x="345" y="135" width="51" height="31"/>
                                 <connections>
-                                    <action selector="bluetoothStatus:" destination="BYZ-38-t0r" eventType="valueChanged" id="Nnd-G2-OUq"/>
+                                    <action selector="senderState:" destination="BYZ-38-t0r" eventType="valueChanged" id="Nnd-G2-OUq"/>
                                 </connections>
                             </switch>
                             <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="tKg-yt-3Lt">
                                 <rect key="frame" x="345" y="170" width="140" height="299"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                                 <connections>
-                                    <action selector="btCentralStatus:" destination="BYZ-38-t0r" eventType="valueChanged" id="41i-oa-5qr"/>
+                                    <action selector="receiverState:" destination="BYZ-38-t0r" eventType="valueChanged" id="41i-oa-5qr"/>
                                 </connections>
                             </switch>
                         </subviews>
@@ -123,7 +120,7 @@
                     </view>
                     <connections>
                         <outlet property="crashButton" destination="bgC-Sq-779" id="cEr-lI-7GX"/>
-                        <outlet property="drumSelector" destination="Ue1-Zd-beP" id="ltU-b6-BLU"/>
+                        <outlet property="drumSelector" destination="Ue1-Zd-beP" id="nY3-J2-vcB"/>
                         <outlet property="floorTomButton" destination="M3Y-Fh-ocl" id="4Iq-fk-N9T"/>
                         <outlet property="hiHatButton" destination="mhg-T5-n2y" id="s5u-Te-Q8n"/>
                         <outlet property="kickButton" destination="CYR-Hb-RCY" id="SKV-V1-Xs5"/>
