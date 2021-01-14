@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="16096" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+    <device id="retina6_1" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="16087"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--View Controller-->
+        <scene sceneID="tne-QT-ifu">
+            <objects>
+                <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="DrumMachine" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="fillEqually" translatesAutoresizingMaskIntoConstraints="NO" id="3Mk-x6-kZd">
+                                <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                                <subviews>
+                                    <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" translatesAutoresizingMaskIntoConstraints="NO" id="gOo-Xf-Kr7">
+                                        <rect key="frame" x="0.0" y="0.0" width="414" height="298.5"/>
+                                        <subviews>
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="CYR-Hb-RCY">
+                                                <rect key="frame" x="0.0" y="0.0" width="207" height="298.5"/>
+                                                <state key="normal" title="Kick"/>
+                                                <connections>
+                                                    <action selector="drumHit:" destination="BYZ-38-t0r" eventType="touchDown" id="0D9-0j-akU"/>
+                                                </connections>
+                                            </button>
+                                            <button opaque="NO" tag="1" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="kgN-iC-fq9">
+                                                <rect key="frame" x="207" y="0.0" width="207" height="298.5"/>
+                                                <state key="normal" title="Snare"/>
+                                                <connections>
+                                                    <action selector="drumHit:" destination="BYZ-38-t0r" eventType="touchDown" id="vcU-bX-SLP"/>
+                                                </connections>
+                                            </button>
+                                        </subviews>
+                                    </stackView>
+                                    <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" translatesAutoresizingMaskIntoConstraints="NO" id="Afc-FO-a5H">
+                                        <rect key="frame" x="0.0" y="298.5" width="414" height="299"/>
+                                        <subviews>
+                                            <button opaque="NO" tag="2" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="M3Y-Fh-ocl">
+                                                <rect key="frame" x="0.0" y="0.0" width="207" height="299"/>
+                                                <state key="normal" title="Floor Tom"/>
+                                                <connections>
+                                                    <action selector="drumHit:" destination="BYZ-38-t0r" eventType="touchDown" id="5c1-be-CCM"/>
+                                                </connections>
+                                            </button>
+                                            <button opaque="NO" tag="3" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="i6c-rR-tgJ">
+                                                <rect key="frame" x="207" y="0.0" width="207" height="299"/>
+                                                <state key="normal" title="Rack Tom"/>
+                                                <connections>
+                                                    <action selector="drumHit:" destination="BYZ-38-t0r" eventType="touchUpInside" id="iTa-HZ-TAJ"/>
+                                                </connections>
+                                            </button>
+                                        </subviews>
+                                    </stackView>
+                                    <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" translatesAutoresizingMaskIntoConstraints="NO" id="VFB-OV-Kdr">
+                                        <rect key="frame" x="0.0" y="597.5" width="414" height="298.5"/>
+                                        <subviews>
+                                            <button opaque="NO" tag="4" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="mhg-T5-n2y">
+                                                <rect key="frame" x="0.0" y="0.0" width="207" height="298.5"/>
+                                                <state key="normal" title="Hi Hat"/>
+                                                <connections>
+                                                    <action selector="drumHit:" destination="BYZ-38-t0r" eventType="touchDown" id="5cP-dU-TTT"/>
+                                                </connections>
+                                            </button>
+                                            <button opaque="NO" tag="5" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="bgC-Sq-779">
+                                                <rect key="frame" x="207" y="0.0" width="207" height="298.5"/>
+                                                <state key="normal" title="Crash"/>
+                                                <connections>
+                                                    <action selector="drumHit:" destination="BYZ-38-t0r" eventType="touchDown" id="ZKc-Pn-jgy"/>
+                                                </connections>
+                                            </button>
+                                        </subviews>
+                                    </stackView>
+                                </subviews>
+                            </stackView>
+                            <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="1" translatesAutoresizingMaskIntoConstraints="NO" id="Ue1-Zd-beP">
+                                <rect key="frame" x="30" y="84" width="354" height="32"/>
+                                <segments>
+                                    <segment title="Kick"/>
+                                    <segment title="Snare"/>
+                                    <segment title="Floor tom"/>
+                                    <segment title="rack tom"/>
+                                    <segment title="hi hat"/>
+                                    <segment title="crash"/>
+                                    <segment title="ride"/>
+                                </segments>
+                                <connections>
+                                    <action selector="drumSelected:" destination="BYZ-38-t0r" eventType="valueChanged" id="6WX-4R-6nM"/>
+                                </connections>
+                            </segmentedControl>
+                            <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="5ec-9f-opi">
+                                <rect key="frame" x="345" y="135" width="51" height="31"/>
+                                <connections>
+                                    <action selector="bluetoothStatus:" destination="BYZ-38-t0r" eventType="valueChanged" id="Nnd-G2-OUq"/>
+                                </connections>
+                            </switch>
+                            <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="tKg-yt-3Lt">
+                                <rect key="frame" x="345" y="170" width="140" height="299"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                                <connections>
+                                    <action selector="btCentralStatus:" destination="BYZ-38-t0r" eventType="valueChanged" id="41i-oa-5qr"/>
+                                </connections>
+                            </switch>
+                        </subviews>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                        <constraints>
+                            <constraint firstItem="3Mk-x6-kZd" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" id="5jD-tB-PSM"/>
+                            <constraint firstItem="Ue1-Zd-beP" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="40" id="BLt-cA-fbw"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="5ec-9f-opi" secondAttribute="trailing" constant="20" id="KJr-WP-N4c"/>
+                            <constraint firstItem="5ec-9f-opi" firstAttribute="top" secondItem="Ue1-Zd-beP" secondAttribute="bottom" constant="20" id="ehE-BS-W0w"/>
+                            <constraint firstAttribute="trailing" secondItem="3Mk-x6-kZd" secondAttribute="trailing" id="sMY-V0-42z"/>
+                            <constraint firstItem="Ue1-Zd-beP" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="30" id="vHT-0o-FBU"/>
+                            <constraint firstAttribute="bottom" secondItem="3Mk-x6-kZd" secondAttribute="bottom" id="wI3-vK-XC3"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="Ue1-Zd-beP" secondAttribute="trailing" constant="30" id="wLq-9r-QBG"/>
+                            <constraint firstItem="3Mk-x6-kZd" firstAttribute="top" secondItem="8bC-Xf-vdC" secondAttribute="top" id="zfp-3q-gGV"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
+                    </view>
+                    <connections>
+                        <outlet property="crashButton" destination="bgC-Sq-779" id="cEr-lI-7GX"/>
+                        <outlet property="drumSelector" destination="Ue1-Zd-beP" id="ltU-b6-BLU"/>
+                        <outlet property="floorTomButton" destination="M3Y-Fh-ocl" id="4Iq-fk-N9T"/>
+                        <outlet property="hiHatButton" destination="mhg-T5-n2y" id="s5u-Te-Q8n"/>
+                        <outlet property="kickButton" destination="CYR-Hb-RCY" id="SKV-V1-Xs5"/>
+                        <outlet property="rackTomButton" destination="i6c-rR-tgJ" id="C6G-cK-DRY"/>
+                        <outlet property="snareButton" destination="kgN-iC-fq9" id="PGW-F3-mF0"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="139" y="100"/>
+        </scene>
+    </scenes>
+</document>
