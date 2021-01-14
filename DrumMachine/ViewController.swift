@@ -10,9 +10,10 @@ import UIKit
 import AVFoundation
 import CoreMotion
 import CoreBluetooth
+import MultipeerConnectivity
 
 
-class ViewController: UIViewController, DrumTriggerDelegate, DrumCentralDelegate {
+class ViewController: UIViewController, DrumTriggerDelegate, DrumCentralDelegate, DrumMultipeerDelegate {
 
     // Main Audio Engine and it's corresponding mixer
     var audioEngine: DrummerAudioEngine = DrummerAudioEngine()
@@ -28,7 +29,7 @@ class ViewController: UIViewController, DrumTriggerDelegate, DrumCentralDelegate
     
     var drumEmitters : [PercussionType : CAEmitterLayer ] = [:]
     
-    var drumSelection = 0
+    var drumMultipeer : DrumMultipeer?
     
     @IBOutlet weak var drumSelector: UISegmentedControl!
     @IBOutlet weak var kickButton: UIButton!
@@ -41,13 +42,13 @@ class ViewController: UIViewController, DrumTriggerDelegate, DrumCentralDelegate
     override func viewDidLoad() {
         super.viewDidLoad()
         // setup the drumkit
-        // Do any additional setup after loading the view.
         PercussionType.allCases.forEach {
             (drumkit.append(PercussiveInstrument(type: $0)))
         }
         
         // setup the segmented control and buttons
         for i in 0..<drumkit.count {
+            // TODO: adjust the number of segments on the control
             drumSelector.setTitle(drumkit[i].description, forSegmentAt: i)
             switch drumkit[i].type {
             case .kick: kickButton.tag = i
@@ -61,9 +62,7 @@ class ViewController: UIViewController, DrumTriggerDelegate, DrumCentralDelegate
             }
         }
         
-        // setup the buttons
-        
-        // Get the singleton instance.
+        // get the audio engine
         audioEngine = DrummerAudioEngine()
         
         // load the kit
@@ -79,7 +78,7 @@ class ViewController: UIViewController, DrumTriggerDelegate, DrumCentralDelegate
         // setup the UI
         emitterSetup()
         
-        // drumkit is ready to play!
+        // drumkit is ready to play locally!
     }
     
     // create the AVAudioPlayerNodes here
@@ -92,42 +91,36 @@ class ViewController: UIViewController, DrumTriggerDelegate, DrumCentralDelegate
         displayHit(instrument: drumkit[button.tag].type)
     }
     
-    @IBAction func drumSelected(_ sender: UISegmentedControl) {
-        let control = sender
-        //print(control.selectedSegmentIndex)
-        drumSelection = control.selectedSegmentIndex
-    }
-    @IBAction func bluetoothStatus(_ sender: UISwitch) {
-        let btstatus = sender
-        print("switch changed to: ", btstatus.isOn)
-        if btstatus.isOn {
+    @IBAction func senderState(_ sender: UISwitch) {
+        let senderStatus = sender
+        print("switch changed to: ", senderStatus.isOn)
+        if senderStatus.isOn {
             // start the peripheral if it doesn't exist
-            if drumPeripheral == nil {
-                drumPeripheral = DrumPeripheral(instrument: drumkit[drumSelector.selectedSegmentIndex])
-            } else {
-                drumPeripheral = nil
-                drumPeripheral = DrumPeripheral(instrument: drumkit[drumSelector.selectedSegmentIndex])
-                //drumPeripheral?.toggleAdvertising(state: btstatus.isOn)
+            if drumMultipeer == nil {
+                drumMultipeer = DrumMultipeer(asType: .sender)
+                drumMultipeer!.delegate = self
             }
+            drumMultipeer!.startAdvertising()
             drumSelector.isEnabled = false
         } else {
-            // stop the peripheral
-            drumPeripheral?.toggleAdvertising(state: btstatus.isOn)
-            //drumCentral?.disconnect(peripheral: drumPeripheral)
+            drumMultipeer!.stopAdvertising()
             drumSelector.isEnabled = true
         }
     }
     
-    @IBAction func btCentralStatus(_ sender: UISwitch) {
-        let btstatus = sender
-        print("switch changed to: ", btstatus.isOn)
-        if btstatus.isOn {
+    @IBAction func receiverState(_ sender: UISwitch) {
+        let receiverStatus = sender
+        print("switch changed to: ", receiverStatus.isOn)
+        if receiverStatus.isOn {
             // start the peripheral
-            drumCentral = DrumCentral()
-            drumCentral?.delegate = self
+            if drumMultipeer == nil {
+                drumMultipeer = DrumMultipeer(asType: .receiver)
+                // show that you're ready or how many connections you have
+                drumMultipeer!.startAdvertising()
+            }
         } else {
             // stop the peripheral
-            drumCentral = nil
+            drumMultipeer!.stopAdvertising()
         }
     }
     
@@ -137,8 +130,15 @@ class ViewController: UIViewController, DrumTriggerDelegate, DrumCentralDelegate
         if drumkit[drumSelector.selectedSegmentIndex].type == .kick {
             view.backgroundColor = .random()
         }
+        // if you're acting as a multipeer network send the hit
+        if drumMultipeer?.type == .sender {
+            drumMultipeer?.sendPercussiveHit(percussionType: drumkit[drumSelector.selectedSegmentIndex].type)
+        }
+        /*
+        // bluetooth
         guard let advertising = drumPeripheral?.isAdvertising() else { return }
         if advertising { drumPeripheral?.sendTrigger() }
+        */
     }
     
     // Bluetooth delegate
@@ -164,8 +164,10 @@ class ViewController: UIViewController, DrumTriggerDelegate, DrumCentralDelegate
             let emitterLayer = InstrumentEmitter()
             let x = CGFloat(instrument.location.x) * widthMidPoint
             let y = CGFloat(instrument.location.y) * height
+            // FIXME: this could crash if you have two drums of the same type
             drumEmitters[instrument.type] = emitterLayer.createDrumEmitterLayerWith(color: UIColor.red.cgColor, location: CGPoint(x: widthMidPoint + x, y: height - y))
             view.layer.addSublayer(drumEmitters[instrument.type]!)
+            drumEmitters[instrument.type]?.isHidden = true
         }
     }
     
@@ -173,6 +175,7 @@ class ViewController: UIViewController, DrumTriggerDelegate, DrumCentralDelegate
         if drumEmitters[instrument]!.velocity == 1 {
             drumEmitters[instrument]!.velocity = 1000
             drumEmitters[instrument]!.birthRate = 1000
+            drumEmitters[instrument]?.isHidden = false
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 // your code here
                 self.displayHit(instrument: instrument)
@@ -180,9 +183,22 @@ class ViewController: UIViewController, DrumTriggerDelegate, DrumCentralDelegate
         } else {
             drumEmitters[instrument]!.velocity = 1
             drumEmitters[instrument]!.birthRate = 1
+            drumEmitters[instrument]?.isHidden = true
         }
     }
     
+    // DrumMultiPeerDelegate
+    func hitReceived(forPercussiveType: PercussionType) {
+        //TODO: should these really take different inputs or should I
+        // change them all to accept the same (type or instrument)
+        for drum in drumkit {
+            if drum.type == forPercussiveType {
+                audioEngine.drumTrigger(percussiveInstrument: drum)
+                break
+            }
+        }
+        displayHit(instrument: forPercussiveType)
+    }
 }
 
 // https://stackoverflow.com/questions/29779128/how-to-make-a-random-color-with-swift

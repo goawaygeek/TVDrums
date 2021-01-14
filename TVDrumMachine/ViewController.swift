@@ -9,8 +9,9 @@
 import UIKit
 import CoreBluetooth
 import AVFoundation
+import MultipeerConnectivity
 
-class ViewController: UIViewController, DrumCentralDelegate {
+class ViewController: UIViewController, DrumCentralDelegate, DrumMultipeerDelegate {
 
     var audioEngine: DrummerAudioEngine = DrummerAudioEngine()
     
@@ -21,6 +22,8 @@ class ViewController: UIViewController, DrumCentralDelegate {
     var emitterLayer : CAEmitterLayer = CAEmitterLayer()
     
     var drumEmitters : [PercussionType : CAEmitterLayer ] = [:]
+    
+    var drumMultipeer : DrumMultipeer!
     
     
     override func viewDidLoad() {
@@ -43,9 +46,12 @@ class ViewController: UIViewController, DrumCentralDelegate {
         // setup the UI
         emitterSetup()
         
-        drumCentral = DrumCentral()
-        drumCentral?.delegate = self
+        //drumCentral = DrumCentral()
+        //drumCentral?.delegate = self
         
+        drumMultipeer = DrumMultipeer(asType: .receiver)
+        drumMultipeer.startAdvertising()
+        drumMultipeer.delegate = self
     }
     
     // Bluetooth delegate
@@ -77,6 +83,7 @@ class ViewController: UIViewController, DrumCentralDelegate {
             let y = CGFloat(instrument.location.y) * height
             drumEmitters[instrument.type] = emitterLayer.createDrumEmitterLayerWith(color: UIColor.red.cgColor, location: CGPoint(x: widthMidPoint + x, y: height - y))
             view.layer.addSublayer(drumEmitters[instrument.type]!)
+            drumEmitters[instrument.type]?.isHidden = true
         }
     }
     
@@ -84,6 +91,7 @@ class ViewController: UIViewController, DrumCentralDelegate {
         if drumEmitters[instrument]!.velocity == 1 {
             drumEmitters[instrument]!.velocity = 1000
             drumEmitters[instrument]!.birthRate = 1000
+            drumEmitters[instrument]!.isHidden = false
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 // your code here
                 self.displayHit(instrument: instrument)
@@ -91,6 +99,22 @@ class ViewController: UIViewController, DrumCentralDelegate {
         } else {
             drumEmitters[instrument]!.velocity = 1
             drumEmitters[instrument]!.birthRate = 1
+        }
+    }
+    
+    // DrumMultiPeerDelegate
+    func hitReceived(forPercussiveType: PercussionType) {
+        //TODO: should these really take different inputs or should I
+        // change them all to accept the same (type or instrument)
+        for drum in drumkit {
+            if drum.type == forPercussiveType {
+                audioEngine.drumTrigger(percussiveInstrument: drum)
+                break
+            }
+        }
+        displayHit(instrument: forPercussiveType)
+        if forPercussiveType == .kick {
+            view.backgroundColor = .random()
         }
     }
 
