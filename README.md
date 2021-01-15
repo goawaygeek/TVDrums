@@ -4,7 +4,7 @@ TVDrums is a rather silly project that I wrote to teach myself some Swift.  It t
 
 [Video demo](https://www.youtube.com/watch?v=vOETCy7_c4Q):
 
-[![YouTube video](https://img.youtube.com/vi/vOETCy7_c4Q/0.jpg)](https://www.youtube.com/watch?v=vOETCy7_c4Q)
+[![YouTube video](http://knockyrsocksoff.com/drums/drums_web.gif)](https://www.youtube.com/watch?v=vOETCy7_c4Q)
 
 I was always planning on cleaning up the code before releasing it but I moved on to [other projects](https://twitter.com/goawaygeek/status/1301339088381833216).  So here it is for you in all its ugly glory.  
 
